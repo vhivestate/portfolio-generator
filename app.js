@@ -1,6 +1,6 @@
-const fs = require('fs');
 const inquirer = require('inquirer');
 const generatePage = require('./src/page-template.js');
+const { writeFile, copyFile } = require('./utils/generate-site.js');
 
 // const pageHTML = generatePage(name, github);
 
@@ -143,13 +143,20 @@ if (!portfolioData.projects) {
 
 
 promptUser()
-  .then(promptProject)
+  .then(promptProject) //captures returning data from promptUser() we call promptUser for as many projects as the user want to add. Each project will be pushed into a projects array in the collection of port info and when done final set of date is returned to next .then 
   .then(portfolioData => {
-    const pageHTML = generatePage(portfolioData);
-
-    fs.writeFile('./index.html', pageHTML, err => {
-      if (err) throw new Error(err);
-
-      console.log('Page created! Check out index.html in this directory to see it!');
-    });
+    return generatePage(portfolioData); //finished port data object returned as portfolioData & sent to generatePage() which returns finished html template code into pageHTML
+  })
+  .then(pageHTML => {
+    return writeFile(pageHTML); //pass into newly created writeFile() which returns a Promise to next .then()
+  })
+  .then(writeFileResponse => {
+    console.log(writeFileResponse); //upon file creation we take this object provided by the writeFile()'s resolve() execution to log it and we return copyFile()
+    return copyFile(); //promise returned lets us know if the css file was copied
+  })
+  .then(copyFileResponse => {
+    console.log(copyFileResponse);
+  })
+  .catch(err => {
+    console.log(err);
   });
